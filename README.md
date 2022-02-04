@@ -19,14 +19,16 @@ To reiterate, the bot is fed different indicators, which are calculated based on
 
 ## ML Progress So Far
 
-We now have a script `data.py` which takes in a CSV from TradingView (a bunch of candle closes over many months) and for each candle its respective RSI value is calculated. This value is inserted and saved into a new CSV file, so that the original one isn't overwritten. 
+We now have a script `data.py` which takes in a CSV from TradingView (a bunch of candle closes over many months) and for each candle (15m) its respective RSI value is calculated. This value is inserted and saved into a new CSV file, so that the original one isn't overwritten. 
 
 ## Next Steps
 
-Do the same thing for the other indicators we want calculatd for each candle (e.g MACD, Bollenger). After this, we will have a CSV that has each candle's respective feature values.
+Do the same thing for the other indicators we want calculatd for each candle (e.g MACD, Bollinger Bands). After this, we will have a CSV that has each candle's respective feature values.
 
 ## Future Steps
 
-Once the feature values are calculated for each row (candle), we launch the classifier we choose (e.g. Logistic Regression) that scans over the training set (the new CSV) and thus gets 'trained'. We then feed this trained classifier a new set of data, and it will tell us if each datapoint (each candle) is a good buy or not. We then see if each candle would've been a good buy or not, and hopefully the classifier we have got it right most of the time!
+- Once the feature values are calculated for each row (candle), we launch the classifier we choose (e.g. Logistic Regression) that scans over the training set (the new CSV) and thus gets 'trained'. We then feed this trained classifier a new set of data, and it will tell us if each datapoint (each candle) is a good buy or not. We then see if each candle would've been a good buy or not, and hopefully the classifier we have got it right most of the time!
+
+- Do the same for the 1m candle data, and the 30m candle data
 
 - Deploy Mr. Botty to Binance!
