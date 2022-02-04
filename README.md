@@ -1,7 +1,7 @@
 # Mr Botty!
 
 ## What functionality exists so far:
-We have a script that retrieves real-time data from Binance (by establishing a socket). This socket receives 'ticks' every second or so. 60 ticks consitutes a 1m candle. We're currently able to calculate various financial indicators based on what a candle closes at. Using this, we've written logic based off of these indicators -- e.g. `if RSI > 80, then buy 0.5 ETH`. 
+We have a script that retrieves real-time data from Binance (by establishing and maintaining a socket connection). This socket receives 'ticks' every second. 60 ticks constitutes a 1 minute candle (whose close value is the last tick). We're currently able to calculate various financial indicators based on what a candle closes at. Using this, we've written logic based off of these indicators -- e.g. `if RSI > 80, then buy 0.5 ETH`. 
 
 **The problem:** We're not knowledgable enough to derive correct-enough logic that gaurantees with enough confidence when to buy, and when not to. All we've done is manually eye balled charts and cherry-picked certain instances where certain indicators result in a good buy -- this logic isn't neccessarily true for other time frames. 
 
@@ -28,4 +28,4 @@ Do the same thing for the other indicators we want calculatd for each candle (e.
 
 Once the feature values are calculated for each row (candle), we launch the classifier we choose (e.g. Logistic Regression) that scans over the training set (the new CSV) and thus gets 'trained'. We then feed this trained classifier a new set of data, and it will tell us if each datapoint (each candle) is a good buy or not. We then see if each candle would've been a good buy or not, and hopefully the classifier we have got it right most of the time!
 
-- Deploy Mr. Botty to Binance!!!
+- Deploy Mr. Botty to Binance!
