@@ -19,7 +19,7 @@ candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's time
 """
 We want to iterate through each candle, and using its close value and the 13 candles before its close values, construct the RSI value for that candle.
 """
-print(f"\n------\nSanity Check: The first row is: {candleCloses[0]}")
+print(f"\n------\n***15M CANDLE DATA SET: 01/07/21 to 04/02/22***\nSanity Check: The first row is: {candleCloses[0]}")
 print(f"The number of rows/candle is: {len(withIndicators)}\n------")
 for i in range(0, len(withIndicators)): # Iterate over every single candle (row) in the dataset.
     if i >= 13:         # If the row we're on has 13 candles above it, we'll use those close values *and* its own close value to calculate its RSI. So, this doesn't happen for the first 13 rows (not enough candles yet)
