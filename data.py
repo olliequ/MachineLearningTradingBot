@@ -8,12 +8,18 @@ We'll use the Finance library to take in each candle (and it's previous closes) 
 features. Then we'll insert it into its row using pandas insert.
 """
 
-rawData = pd.read_csv("/Users/Ollie/Desktop/Ollie/Programming/Programming Projects/Trading_Bot/MachineLearningBot/CSVs/ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("CSVs\ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00 # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
-rawData.to_csv("/Users/Ollie/Desktop/Ollie/Programming/Programming Projects/Trading_Bot/MachineLearningBot/CSVs/RSI.csv", index=False) # Save this modified dataframe into a new CSV file.
-withIndicators = pd.read_csv("/Users/Ollie/Desktop/Ollie/Programming/Programming Projects/Trading_Bot/MachineLearningBot/CSVs/RSI.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
+rawData["MACD"] = 0.00 # Add a new column in the dataframe, MACD value initialised as 0.
+rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal value initialised as 0.
+rawData["MACDHIST"] = 0.00 # Add a new column in the dataframe, MACD Hist value initialised as 0.
+rawData.to_csv("CSVs\RSI.csv", index=False) # Save this modified dataframe into a new CSV file.
+withIndicators = pd.read_csv("CSVs\RSI.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
 RSI_Period = 14
+Fast_Period = 12 # MACD fast period initialised at 12, subject to change.
+Slow_Period = 26 # MACD slow period initialised at 26, subject to change.   
+Signal_Period = 9 # MACD signal period initialised at 9, subject to change.
 
 candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's timestamp, its close value, and it's RSI value (initialised as 0)
 """
@@ -30,5 +36,13 @@ for i in range(0, len(withIndicators)): # Iterate over every single candle (row)
         # print(rsi[-1]) # rsi is actually an array of size 14 elements, and so we need the last value of it, because the first 13 are NaN. 
         withIndicators["RSI"][i] = rsi[-1] # Insert this calculated value into the 'fresh' dataframe.
 
+# MACD
+macd_closes = withIndicators['close'].to_numpy() # "Close" column from CSV converted to numpy array
+macd, macdsignal, macdhist = talib.MACD(macd_closes, Fast_Period, Slow_Period, Signal_Period) # MACD calculated using candle close data, Fast/Slow/Signal Periods can be changed at initialisation point.
+withIndicators["MACD"]= macd # Calculated MACD values imported into CSV
+withIndicators["MACDSIGNAL"] = macdsignal # Calculated MACD Signal values imported into CSV
+withIndicators["MACDHIST"]= macdhist # Calculated MACD Hist values imported into CSV
+
+
 print(f"\nBelow will simply print the first 20 rows. Open up RSI.csv to see it all. The first 13 below obviously don't have an RSI:\n\n{withIndicators.loc[0:20,:]}")
-withIndicators.to_csv("/Users/Ollie/Desktop/Ollie/Programming/Programming Projects/Trading_Bot/MachineLearningBot/CSVs/RSI.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
+withIndicators.to_csv("CSVs\RSI.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
