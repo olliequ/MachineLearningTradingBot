@@ -32,3 +32,7 @@ Do the same thing for the other indicators we want calculatd for each candle (e.
 - Do the same for the 1m candle data, and the 30m candle data.
 
 - Deploy Mr. Botty to Binance!
+
+## Extra Notes:
+
+- The 6:45 candle opens at a price, and this is the price that 6:44:59 ticks over into. Thus, the price the 6:45 candle closes at is the opening price of the 7:00 candle. When a candle closes, we immediately calculate the RSI of the last 14 values (which includes its closing price). We then act depending on the value. So, we want to loop through each candle (row), and using its close value and the previous 13 ones, calculate the RSI for that candle. That is, the value as a result of that candle’s close.
