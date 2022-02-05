@@ -1,5 +1,9 @@
 # Mr Botty!
 
+<p style="text-align: center;">Centered text</p>
+
+<img align="left" width="200" src="https://i.pinimg.com/originals/76/f3/ec/76f3ec2ea3bb788ae75fb099cf6e55a7.jpg">
+
 ## What functionality exists so far:
 We have a script that retrieves real-time data from Binance (by establishing and maintaining a socket connection). This socket receives 'ticks' every second. 60 ticks constitutes a 1 minute candle (whose *close* value is the last tick). We're currently able to calculate various financial indicators based on what a candle closes at. Using this, we've written logic based off of these indicators -- e.g. `if RSI > 80, then buy 0.5 ETH`. 
 
@@ -51,4 +55,4 @@ Do the same thing for the other indicators we want calculated for each candle (e
 
 - For a 15m candle dataset, the 06:45 candle opens at a price, and this is the price that 06:44:59 ticks over into. Thus, the price the 06:45 candle closes at is the opening price of the 07:00 candle (essentially the price at 06:59:59). When a candle closes, we immediately calculate the RSI using the last 14 candle closes (which includes the current candle's closing price). We then act depending on the value. So, we want to loop through each candle (row), and using its close value and the previous 13 ones, calculate the RSI for that candle. That is, the RSI value as a result of that candle’s close.
 
-- Everytime we implement a new indicator and fill out the csv, it would be wise to verify they are the correct values by checking it against the actual chart on Binance. For example seeing that the 15m candle at July 1st 06:45 does indeed have an RSI value of 23.1 on the Binance chart
+- Everytime we implement a new indicator and fill out the CSV, it would be wise to verify they are the correct values by checking it against the actual chart on Binance. For example seeing that the 15m candle at July 1st 06:45 does indeed have an RSI value of 23.1 on the Binance chart
