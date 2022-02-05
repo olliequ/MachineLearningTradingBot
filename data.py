@@ -4,17 +4,17 @@ import talib
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
-We'll use the Finance library to take in each candle (and it's previous closes) and calculate its
-features. Then we'll insert it into its row using pandas insert.
+We'll use the TA library to take in each candle (and previous candle closes before it) and calculate these
+features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("CSVs\ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00 # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00 # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal value initialised as 0.
 rawData["MACDHIST"] = 0.00 # Add a new column in the dataframe, MACD Hist value initialised as 0.
-rawData.to_csv("CSVs\RSI.csv", index=False) # Save this modified dataframe into a new CSV file.
-withIndicators = pd.read_csv("CSVs\RSI.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
+rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
+withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
 RSI_Period = 14
 Fast_Period = 12 # MACD fast period initialised at 12, subject to change.
@@ -25,7 +25,7 @@ candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's time
 """
 We want to iterate through each candle, and using its close value and the 13 candles before its close values, construct the RSI value for that candle.
 """
-print(f"\n------\n***15M CANDLE DATA SET: 01/07/21 to 04/02/22***\nSanity Check: The first row is: {candleCloses[0]}")
+print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nSanity Check: The first row is: {candleCloses[0]}")
 print(f"The number of rows/candle is: {len(withIndicators)}\n------")
 for i in range(0, len(withIndicators)): # Iterate over every single candle (row) in the dataset.
     if i >= 13:         # If the row we're on has 13 candles above it, we'll use those close values *and* its own close value to calculate its RSI. So, this doesn't happen for the first 13 rows (not enough candles yet)
@@ -44,5 +44,5 @@ withIndicators["MACDSIGNAL"] = macdsignal # Calculated MACD Signal values import
 withIndicators["MACDHIST"]= macdhist # Calculated MACD Hist values imported into CSV
 
 
-print(f"\nBelow will simply print the first 20 rows. Open up RSI.csv to see it all. The first 13 below obviously don't have an RSI:\n\n{withIndicators.loc[0:20,:]}")
-withIndicators.to_csv("CSVs\RSI.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
+print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
+withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
