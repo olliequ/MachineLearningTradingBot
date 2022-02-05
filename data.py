@@ -15,7 +15,7 @@ rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal va
 rawData["MACDHIST"] = 0.00 # Add a new column in the dataframe, MACD Hist value initialised as 0.
 rawData["BBW"] = 0.00 # Bollinger Band Width -- a measure between the bands.
 rawData["OBV"] = 0.00 # Add new column in the dataframe, OBV value initialised as 0.
-rawData["Label"] = "No"
+rawData["Label"] = "DontBuy"
 rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
 withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
@@ -60,6 +60,11 @@ for i in range(0, len(middleband)):
 # OBV
 real = talib.OBV(justCloses, justVolume)
 withIndicators["OBV"] = real
+
+# Creating the labels
+for i in range(0, len(withIndicators)-1):
+    if withIndicators['close'][i] < withIndicators['close'][i+1]:
+        withIndicators['Label'][i] = "Buy"
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
