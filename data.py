@@ -15,6 +15,7 @@ rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal va
 rawData["MACDHIST"] = 0.00 # Add a new column in the dataframe, MACD Hist value initialised as 0.
 rawData["BBW"] = 0.00 # Bollinger Band Width -- a measure between the bands.
 rawData["OBV"] = 0.00 # Add new column in the dataframe, OBV value initialised as 0.
+rawData["Label"] = 0
 rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
 withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
@@ -41,7 +42,6 @@ print(f"The number of rows/candle is: {len(withIndicators)}\n------")
 rsi = talib.RSI(justCloses, RSI_Period) 
 withIndicators['RSI'] = rsi
 
-
 # MACD
 macd, macdsignal, macdhist = talib.MACD(justCloses, Fast_Period, Slow_Period, Signal_Period) # MACD calculated using candle close data, Fast/Slow/Signal Periods can be changed at initialisation point.
 withIndicators["MACD"]= macd # Calculated MACD values imported into CSV
@@ -52,10 +52,7 @@ withIndicators["MACDHIST"]= macdhist # Calculated MACD Hist values imported into
 upperband, middleband, lowerband = talib.BBANDS(justCloses, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
 withIndicators["BBW"] = ((upperband - lowerband) / middleband)
 
-print(middleband.shape)
-
 # OBV
-
 real = talib.OBV(justCloses, justVolume)
 withIndicators["OBV"] = real
 
@@ -65,6 +62,10 @@ slowk, slowd = talib.STOCH(justHighs, justLows, justCloses, fastk_period=14, slo
 withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
+# Creating the labels
+for i in range(0, len(withIndicators)-1):
+    if withIndicators['close'][i] < withIndicators['close'][i+1]:
+        withIndicators['Label'][i] = 1
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
