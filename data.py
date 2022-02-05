@@ -14,6 +14,7 @@ rawData["MACD"] = 0.00 # Add a new column in the dataframe, MACD value initialis
 rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal value initialised as 0.
 rawData["MACDHIST"] = 0.00 # Add a new column in the dataframe, MACD Hist value initialised as 0.
 rawData["BBW"] = 0.00 # Bollinger Band Width -- a measure between the bands.
+rawData["Label"] = "No"
 rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
 withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
@@ -32,7 +33,7 @@ We want to iterate through each candle, and using its close value and the 13 can
 print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nSanity Check: The first row is: {candleCloses[0]}")
 print(f"The number of rows/candle is: {len(withIndicators)}\n------")
 
-#RSI
+# RSI
 for i in range(0, len(withIndicators)): # Iterate over every single candle (row) in the dataset.
     if i >= 13:         # If the row we're on has 13 candles above it, we'll use those close values *and* its own close value to calculate its RSI. So, this doesn't happen for the first 13 rows (not enough candles yet)
         close_values = [candleCloses[i-13][1], candleCloses[i-12][1], candleCloses[i-11][1], candleCloses[i-10][1], candleCloses[i-9][1], candleCloses[i-8][1], candleCloses[i-7][1], candleCloses[i-6][1], candleCloses[i-6][1], candleCloses[i-5][1], candleCloses[i-4][1], candleCloses[i-3][1], candleCloses[i-2][1], candleCloses[i-1][1], candleCloses[i][1]]
