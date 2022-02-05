@@ -65,7 +65,7 @@ withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
 # Creating the labels
-withIndicators["Labels"] = np.where(withIndicators['close'] > withIndicators['close'].shift(), 1, 0)
+withIndicators["Label"] = np.where(withIndicators['close'] > withIndicators['close'].shift(), 1, 0)
 
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
