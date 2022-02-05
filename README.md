@@ -1,8 +1,6 @@
 # Mr Botty!
 
-<img align="center" width="500" src="https://i.pinimg.com/originals/76/f3/ec/76f3ec2ea3bb788ae75fb099cf6e55a7.jpg"><br>
-
-<p align="center">
+<p align="center" width="300">
   <img src="https://i.pinimg.com/originals/76/f3/ec/76f3ec2ea3bb788ae75fb099cf6e55a7.jpg" />
 </p>
 
