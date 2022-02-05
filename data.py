@@ -14,6 +14,7 @@ rawData["MACD"] = 0.00 # Add a new column in the dataframe, MACD value initialis
 rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal value initialised as 0.
 rawData["MACDHIST"] = 0.00 # Add a new column in the dataframe, MACD Hist value initialised as 0.
 rawData["BBW"] = 0.00 # Bollinger Band Width -- a measure between the bands.
+rawData["OBV"] = 0.00 # Add new column in the dataframe, OBV value initialised as 0.
 rawData["Label"] = "No"
 rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
 withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
@@ -25,6 +26,7 @@ Signal_Period = 9 # MACD signal period initialised at 9, subject to change.
 
 candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's timestamp, its close value, and it's RSI value (initialised as 0
 justCloses = withIndicators['close'].to_numpy() # "Close" column from CSV converted to numpy array
+justVolume = withIndicators['Volume'].to_numpy() # "Volume" column from CSV converted to numpy array
 
 """
 We want to iterate through each candle, and using its close value and the 13 candles before its close values, construct the RSI value for that candle.
@@ -55,7 +57,9 @@ upperband, middleband, lowerband = talib.BBANDS(justCloses, timeperiod=20, nbdev
 for i in range(0, len(middleband)):
     withIndicators["BBW"][i] = ((upperband[i]-lowerband[i])/middleband[i])
 
-print(middleband.shape)
+# OBV
+real = talib.OBV(justCloses, justVolume)
+withIndicators["OBV"] = real
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
