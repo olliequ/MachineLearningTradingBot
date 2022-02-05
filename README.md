@@ -35,7 +35,19 @@ Do the same thing for the other indicators we want calculated for each candle (e
 
 - Deploy Mr. Botty to Binance!
 
-## Extra Notes:
+## Our Indicators
+
+- **Relative Strength Index (RSI)**: The RSI is a *momentum indicator* that compares the number of days an instrument closes up versus closing down. These values are then ranged from 0 to 100, with overbuying typically expected when the RSI returns a value of over 70 and oversold securities are expected when the value is under 30. For example, if an instrument price reaches the upper band of a Bollinger Band price channel and, at the same time, the RSI reads 70+, you could discern that the instrument is overbought, and then sell the instrument.
+
+- **Moving Average Convergence Divergence (MACD)**: MACD is a *trend-following momentum indicator* that shows the relationship between two moving averages of a security’s price. The MACD is calculated by subtracting the 26-period exponential moving average (EMA) from the 12-period EMA. The result of that calculation is the MACD line. A nine-day EMA of the MACD called the "signal line," is then plotted on top of the MACD line, which can function as a trigger for buy and sell signals (there is thus 2 lines for the MACD). Traders may buy the security when the MACD crosses above its signal line and sell—or short—the security when the MACD crosses below the signal line. Moving average convergence divergence (MACD) indicators can be interpreted in several ways, but the more common methods are crossovers, divergences, and rapid rises/falls.
+
+- **Bollinger Bands**: Bollinger Bands are a set of trendlines plotted two standard deviations (positively and negatively) away from a simple moving average (SMA) of a security's price, but which can be adjusted to user preferences. They're designed to discover opportunities that give investors a higher probability of properly identifying when an asset is oversold or overbought. There are three lines that compose Bollinger Bands: A simple moving average (middle band) and an upper and lower band. The upper and lower bands are typically 2 standard deviations +/- from a 20-day simple moving average, but these numerical values can be modified.
+
+- **On-Balance Volume (OBV)**: On-balance volume (OBV) is a *momentum (leading) indicator* that uses volume flow to predict changes in asset price. It's based on the belief that when volume increases sharply without a significant change in the stock's price, the price will eventually jump upward or fall downward. OBV shows crowd sentiment that can predict a bullish or bearish outcome. Comparing relative action between price bars and OBV generates more actionable signals than the green or red volume histograms commonly found at the bottom of price charts. Good explanation: https://www.investopedia.com/terms/o/onbalancevolume.asp.
+
+- **EMA/SMA**: We could also a customized SMA/EMA like you did last year when trading futues.
+
+## Extra Notes
 
 - For a 15m candle dataset, the 06:45 candle opens at a price, and this is the price that 06:44:59 ticks over into. Thus, the price the 06:45 candle closes at is the opening price of the 07:00 candle (essentially the price at 06:59:59). When a candle closes, we immediately calculate the RSI using the last 14 candle closes (which includes the current candle's closing price). We then act depending on the value. So, we want to loop through each candle (row), and using its close value and the previous 13 ones, calculate the RSI for that candle. That is, the RSI value as a result of that candle’s close.
 
