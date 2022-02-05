@@ -7,7 +7,7 @@
 ## What functionality exists so far:
 We have a script that retrieves real-time data from Binance (by establishing and maintaining a socket connection). This socket receives 'ticks' every second. 60 ticks constitutes a 1 minute candle (whose *close* value is the last tick). We're currently able to calculate various financial indicators based on what a candle closes at. Using this, we've written logic based off of these indicators -- e.g. `if RSI > 80, then buy 0.5 ETH`. 
 
-**The problem:** We're not knowledgable enough to derive correct-enough logic that gaurantees with enough confidence when to buy, and when not to. All we've done is manually eye balled charts and cherry-picked certain instances where certain indicators result in a good buy -- this logic isn't neccessarily true for other time frames. 
+**The problem:** We're not knowledgable enough to derive correct-enough logic that gaurantees with enough confidence when to buy, and when not to. All we've done is manually eye-balled charts and cherry-picked certain instances where certain indicators result in a good buy -- this logic isn't neccessarily true for other time frames. 
 
 **The solution:** Use Machine Learning (ie. Mr Botty!) to identify and understand the relationships between the financial indicators over several thousand candles. If we're lucky, the machine learning will develop a correlation between them and identify a pattern between them, such that if the pattern is observed in future, it is a buy signal.
 
