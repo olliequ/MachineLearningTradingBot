@@ -127,19 +127,18 @@ Now that the CSV is cleaned up and we have an idea of MI, we can begin implement
 print("\n------\nData is now cleaned up and partioned, so let's apply the classifiers.\n------\n")
 
 # ---> Naive Bayes
-def nb_num_features(train_features, train_labels, test_features): # Naive Bayers classifier.
+def NB_Classifier(train_features, train_labels, test_features): # Naive Bayers classifier.
     predictions = []
     gnb = GaussianNB()
     gnb.fit(train_features, train_labels)
     predictions = gnb.predict(test_features)
     return predictions
 
-nb_predictions = nb_num_features(trainFeatures, trainLabels, testFeatures) # Predictions for the test set. 
+nb_predictions = NB_Classifier(trainFeatures, trainLabels, testFeatures) # Predictions for the test set. 
 print(f"1) Naive Bayes\n\t- Predicted class distribution:\t- {Counter(nb_predictions)}")
 NB_error = 1 - accuracy_score(nb_predictions, testLabels)
 NB_f1 = f1_score(nb_predictions, testLabels, average='macro')
 print(f"\n---> NB\t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
-
 
 # ---> Logistic Regression
 lr_predictions = []
@@ -153,7 +152,7 @@ np.set_printoptions(suppress=True)
 def normalizer(array):
     normalized_array = copy.deepcopy(array)
     for i in range(0, len(array[0])):
-        for j in range(0, len(array)):\
+        for j in range(0, len(array)):
             normalized_array[j][i] = (array[j][i] - mean[i])/std[i]  
     return normalized_array
 
