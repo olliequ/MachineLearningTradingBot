@@ -1,14 +1,11 @@
 import numpy as np
 import pandas as pd
-import talib
-import subprocess, platform, os 
-import copy
+import talib, copy, subprocess, platform, os 
 from collections import Counter
 from sklearn.feature_selection import mutual_info_classif as MIC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.linear_model import LogisticRegression
-from sklearn import preprocessing
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
