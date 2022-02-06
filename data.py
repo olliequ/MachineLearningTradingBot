@@ -40,7 +40,6 @@ print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22*
 print(f"The number of rows/candle is: {len(withIndicators)}\n------")
 
 #RSI
-
 rsi = talib.RSI(justCloses, RSI_Period) 
 withIndicators['RSI'] = rsi
 
@@ -59,7 +58,6 @@ real = talib.OBV(justCloses, justVolume)
 withIndicators["OBV"] = real
 
 # Stochastic
-
 slowk, slowd = talib.STOCH(justHighs, justLows, justCloses, fastk_period=14, slowk_period=1, slowk_matype=0, slowd_period=3, slowd_matype=0)
 withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
@@ -68,8 +66,6 @@ withIndicators['SLOWD'] = slowd
 for i in range(0, len(withIndicators)-1):
     if withIndicators['close'][i] < withIndicators['close'][i+1]:
         withIndicators['Label'][i] = 1
-
-
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
