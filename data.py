@@ -26,7 +26,7 @@ Fast_Period = 12 # MACD fast period initialised at 12, subject to change.
 Slow_Period = 26 # MACD slow period initialised at 26, subject to change.   
 Signal_Period = 9 # MACD signal period initialised at 9, subject to change.
 
-candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's timestamp, its close value, and it's RSI value (initialised as 0
+candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's timestamp, its close value, and it's RSI value (initialised as 0)
 justCloses = withIndicators['close'].to_numpy() # "Close" column from CSV converted to numpy array
 justVolume = withIndicators['Volume'].to_numpy() # "Volume" column from CSV converted to numpy array
 justHighs = withIndicators['high'].to_numpy() # "High" column from CSV converted to numpy array
