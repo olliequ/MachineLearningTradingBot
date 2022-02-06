@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 import talib
 import subprocess, platform, os 
+from collections import Counter
+from sklearn.feature_selection import mutual_info_classif as MIC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, f1_score
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
@@ -63,7 +67,7 @@ withIndicators['SLOWD'] = slowd
 
 # Creating the labels and cleaning up
 withIndicators["Label"] = np.where((withIndicators['close'] + 10) < withIndicators['close'].shift(-1), 1, 0)
-withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 13) is overwritten with the features and labels inserted.
+withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
 withIndicators.drop(    # Drop the columns that aren't features.
         labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "SLOWK", "SLOWD"],
@@ -85,6 +89,7 @@ testFeaturesDF.to_csv("./CSVs/testFeaturesDF.csv", index=False, header=False)
 testLabelsDF = withIndicators.iloc[18001:, 4]
 testLabelsDF.to_csv("./CSVs/testLabelsDF .csv", index=False, header=False)
 
+featureNames = list(trainFeaturesDF.columns.values) 
 trainFeatures = trainFeaturesDF.to_numpy()
 trainLabels = trainLabelsDF.to_numpy()
 testLabels = testLabelsDF.to_numpy()
@@ -98,7 +103,35 @@ elif platform.system() == 'Windows':    # Windows
     os.startfile("./CSVs/withFeatures.csv")
 
 """
+Below measures the correlation of each feature on the labels; the degree as to which each feature affects the label.
+"""
+highest_mi_feature_name = "" # feature with highest MI
+lowest_mi_feature_name = "" # feature with lowest MI
+mi_score = MIC(trainFeatures, trainLabels, discrete_features=False)
+index_of_largest_mi = np.argmax(mi_score)
+largest_mi = mi_score[index_of_largest_mi]
+index_of_lowest_mi = np.argmin(mi_score)
+lowest_mi = mi_score[index_of_lowest_mi]
+highest_mi_feature_name = featureNames[index_of_largest_mi]
+lowest_mi_feature_name = featureNames[index_of_lowest_mi]
+print(f"The feature with highest MI is: {highest_mi_feature_name}")
+print(f"The feature with lowest MI is: {lowest_mi_feature_name}")
+print(f'All 16 MIC scores are as follows:\n{np.round(mi_score, 3)}')
+
+"""
 Now that the CSV is cleaned up, we can begin implementing the classifier.
 """
+print("\n------\nData is now cleaned up and partioned, let's apply the classifiers.\n------\n")
 
-print("\n------\nData is now cleaned up and partioned, let's apply the classifiers.\n------")
+def nb_num_features(train_features, train_labels, test_features): # Naive Bayers classifier.
+    predictions = []
+    gnb = GaussianNB()
+    gnb.fit(train_features, train_labels)
+    predictions = gnb.predict(test_features)
+    return predictions
+
+nb_predictions = nb_num_features(trainFeatures, trainLabels, testFeatures) # Predictions for the test set. 
+print(f"NB predicted class distribution:\n\t- {Counter(nb_predictions)}")
+NB_error = 1 - accuracy_score(nb_predictions, testLabels)
+NB_f1 = f1_score(nb_predictions, testLabels, average='macro')
+print(f"\nNaive Bayes \t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
