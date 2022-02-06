@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import talib
+import subprocess, platform, os 
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
@@ -62,8 +63,25 @@ slowk, slowd = talib.STOCH(justHighs, justLows, justCloses, fastk_period=14, slo
 withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
-# Creating the labels
-withIndicators["Label"] = np.where(withIndicators['close'] > withIndicators['close'].shift(), 1, 0)
+# Creating the labels and cleaning up
+withIndicators["Label"] = np.where((withIndicators['close'] + 10) < withIndicators['close'].shift(-1), 1, 0)
+
+withIndicators.drop(
+        labels = ["time", "open", "high", "low", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "SLOWK", "SLOWD"],
+        axis = 1,
+        inplace = True
+        )
+withIndicators.drop(
+        labels = range(0, 33),
+        axis=0,
+        inplace = True
+        )
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
+
+# Open the CSV in Excel for viewing
+if platform.system() == 'Darwin':       # macOS
+    subprocess.call(('open', "./CSVs/withFeatures.csv"))
+elif platform.system() == 'Windows':    # Windows
+    os.startfile("./CSVs/withFeatures.csv")
