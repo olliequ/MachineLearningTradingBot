@@ -61,23 +61,34 @@ slowk, slowd = talib.STOCH(justHighs, justLows, justCloses, fastk_period=14, slo
 withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
-# Creating the labels and cleaning up
+# Creating the labels and saving the completed dataset. 
 withIndicators["Label"] = np.where((withIndicators['close'] + 10) < withIndicators['close'].shift(-1), 1, 0)
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
+# The below opens the CSV in Excel for viewing when this script is run.
+if platform.system() == 'Darwin':       # macOS
+    subprocess.call(('open', "./CSVs/withFeatures.csv"))
+elif platform.system() == 'Windows':    # Windows
+    os.startfile("./CSVs/withFeatures.csv")
 
+# Now the data processing begins. We drop the useless columns and rows.
 withIndicators.drop(    # Drop the columns that aren't features.
         labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "SLOWK", "SLOWD"],
         axis = 1,
         inplace = True
         )
-withIndicators.drop(    # Drop the first 33 rows that have blank cells.
+withIndicators.drop(    # Drop the first 33 rows as they contain blank cells.
         labels = range(0, 33),
         axis=0,
         inplace = True
         )
 
+"""
+Below we partition the whole dataset into 4 parts: training data, training labels, test data, test labels.
+It's 90/10 split -- 90% of candles are used for training, and the other 10% is the test set where make the
+predictions and then compare them to the actual test labels.
+"""
 trainFeaturesDF = withIndicators.iloc[:18000, 0:4]
-trainFeaturesDF.to_csv("./CSVs/trainFeaturesDF.csv", index=False, header=False)
+trainFeaturesDF.to_csv("./CSVs/trainFeaturesDF.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
 trainLabelsDF = withIndicators.iloc[:18000, 4]
 trainLabelsDF.to_csv("./CSVs/trainLabelsDF.csv", index=False, header=False)
 testFeaturesDF = withIndicators.iloc[18001:, 0:4]
@@ -87,20 +98,15 @@ testLabelsDF.to_csv("./CSVs/testLabelsDF .csv", index=False, header=False)
 
 featureNames = list(trainFeaturesDF.columns.values) 
 print(f"The features currently selected for training are: {featureNames}")
-trainFeatures = trainFeaturesDF.to_numpy()
+trainFeatures = trainFeaturesDF.to_numpy() # Convert the partitioned dataframes above into numpy arrays (needed for the classifiers).
 trainLabels = trainLabelsDF.to_numpy()
 testLabels = testLabelsDF.to_numpy()
 testFeatures = testFeaturesDF.to_numpy()
 print("Dimensions of the partitioned dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
 
-# Opens the CSV in Excel for viewing when this script is run.
-if platform.system() == 'Darwin':       # macOS
-    subprocess.call(('open', "./CSVs/withFeatures.csv"))
-elif platform.system() == 'Windows':    # Windows
-    os.startfile("./CSVs/withFeatures.csv")
-
 """
-Mutual Information (MI) measures the correlation of each feature on the labels; the degree as to which each feature affects the label.
+Mutual Information (MI) measures the correlation of each feature with the labels; the degree as to which
+each feature affects the label. Optional metric, but I included it for fun.
 """
 highest_mi_feature_name = "" # feature with highest MI
 lowest_mi_feature_name = "" # feature with lowest MI
@@ -116,7 +122,7 @@ print(f"The feature with the lowest MI is: {lowest_mi_feature_name}")
 print(f'All 16 MIC scores are as follows: {np.round(mi_score, 3)}')
 
 """
-Now that the CSV is cleaned up, we can begin implementing the classifier.
+Now that the CSV is cleaned up and we have an idea of MI, we can begin implementing the classifier.
 """
 print("\n------\nData is now cleaned up and partioned, so let's apply the classifiers.\n------\n")
 
