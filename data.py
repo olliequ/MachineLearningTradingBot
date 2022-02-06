@@ -2,10 +2,13 @@ import numpy as np
 import pandas as pd
 import talib
 import subprocess, platform, os 
+import copy
 from collections import Counter
 from sklearn.feature_selection import mutual_info_classif as MIC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, f1_score
+from sklearn.linear_model import LogisticRegression
+from sklearn import preprocessing
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
@@ -36,11 +39,7 @@ justVolume = withIndicators['Volume'].to_numpy() # "Volume" column from CSV conv
 justHighs = withIndicators['high'].to_numpy() # "High" column from CSV converted to numpy array
 justLows = withIndicators['low'].to_numpy() # "Low" column from CSV converted to numpy array
 
-"""
-We want to iterate through each candle, and using its close value and the 13 candles before its close values, construct the RSI value for that candle.
-"""
-
-print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nThe number of rows/candle is: {len(withIndicators)}\n------")
+print(f"\n------\n***15m CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nThe total number of rows/candles is: {len(withIndicators)}\n------\n")
 
 # RSI
 rsi = talib.RSI(justCloses, RSI_Period) 
@@ -90,20 +89,21 @@ testLabelsDF = withIndicators.iloc[18001:, 4]
 testLabelsDF.to_csv("./CSVs/testLabelsDF .csv", index=False, header=False)
 
 featureNames = list(trainFeaturesDF.columns.values) 
+print(f"The features currently selected for training are: {featureNames}")
 trainFeatures = trainFeaturesDF.to_numpy()
 trainLabels = trainLabelsDF.to_numpy()
 testLabels = testLabelsDF.to_numpy()
 testFeatures = testFeaturesDF.to_numpy()
-print("\nShape of new dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
+print("Dimensions of the partitioned dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
 
-# Open the CSV in Excel for viewing
+# Opens the CSV in Excel for viewing when this script is run.
 if platform.system() == 'Darwin':       # macOS
     subprocess.call(('open', "./CSVs/withFeatures.csv"))
 elif platform.system() == 'Windows':    # Windows
     os.startfile("./CSVs/withFeatures.csv")
 
 """
-Below measures the correlation of each feature on the labels; the degree as to which each feature affects the label.
+Mutual Information (MI) measures the correlation of each feature on the labels; the degree as to which each feature affects the label.
 """
 highest_mi_feature_name = "" # feature with highest MI
 lowest_mi_feature_name = "" # feature with lowest MI
@@ -114,15 +114,16 @@ index_of_lowest_mi = np.argmin(mi_score)
 lowest_mi = mi_score[index_of_lowest_mi]
 highest_mi_feature_name = featureNames[index_of_largest_mi]
 lowest_mi_feature_name = featureNames[index_of_lowest_mi]
-print(f"The feature with highest MI is: {highest_mi_feature_name}")
-print(f"The feature with lowest MI is: {lowest_mi_feature_name}")
-print(f'All 16 MIC scores are as follows:\n{np.round(mi_score, 3)}')
+print(f"\nThe feature with the highest MI is: {highest_mi_feature_name}")
+print(f"The feature with the lowest MI is: {lowest_mi_feature_name}")
+print(f'All 16 MIC scores are as follows: {np.round(mi_score, 3)}')
 
 """
 Now that the CSV is cleaned up, we can begin implementing the classifier.
 """
-print("\n------\nData is now cleaned up and partioned, let's apply the classifiers.\n------\n")
+print("\n------\nData is now cleaned up and partioned, so let's apply the classifiers.\n------\n")
 
+# ---> Naive Bayes
 def nb_num_features(train_features, train_labels, test_features): # Naive Bayers classifier.
     predictions = []
     gnb = GaussianNB()
@@ -131,7 +132,39 @@ def nb_num_features(train_features, train_labels, test_features): # Naive Bayers
     return predictions
 
 nb_predictions = nb_num_features(trainFeatures, trainLabels, testFeatures) # Predictions for the test set. 
-print(f"NB predicted class distribution:\n\t- {Counter(nb_predictions)}")
+print(f"1) Naive Bayes\n\tPredicted class distribution:\t- {Counter(nb_predictions)}")
 NB_error = 1 - accuracy_score(nb_predictions, testLabels)
 NB_f1 = f1_score(nb_predictions, testLabels, average='macro')
-print(f"\nNaive Bayes \t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
+print(f"\n---> NB\t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
+
+
+# ---> Logistic Regression
+lr_predictions = []
+trainFeaturesNormalised = []
+testFeaturesNormalised = []
+
+mean = np.mean(trainFeatures, axis=0)
+std = np.std(trainFeatures, axis=0)
+np.set_printoptions(suppress=True)
+
+def normalizer(array):
+    normalized_array = copy.deepcopy(array)
+    for i in range(0, len(array[0])):
+        for j in range(0, len(array)):\
+            normalized_array[j][i] = (array[j][i] - mean[i])/std[i]  
+    return normalized_array
+
+trainFeaturesNormalised = normalizer(trainFeatures)
+testFeaturesNormalised = normalizer(testFeatures)
+
+logisticRegr = LogisticRegression()
+logisticRegr.fit(trainFeaturesNormalised, trainLabels)
+lr_predictions = logisticRegr.predict(testFeaturesNormalised)
+
+score = logisticRegr.score(testFeaturesNormalised, testLabels)
+lr_err = 1 - accuracy_score(lr_predictions, testLabels)
+lr_f1 = f1_score(lr_predictions, testLabels, average='macro')
+
+print(f"\n2) Logistic Regression\n\t- Predicted class distribution:\t{Counter(lr_predictions)}")
+print(f'\t- The coefficients for this LR classifier are:\t{logisticRegr.coef_}')
+print(f"\n---> LR\t\tError: {round(lr_err, 2)}\tMacro F1: {round(lr_f1, 2)}")
