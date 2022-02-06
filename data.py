@@ -27,7 +27,6 @@ Fast_Period = 12 # MACD fast period initialised at 12, subject to change.
 Slow_Period = 26 # MACD slow period initialised at 26, subject to change.   
 Signal_Period = 9 # MACD signal period initialised at 9, subject to change.
 
-candleCloses = withIndicators.iloc[:,[0,4,7]].values # Isolate the candle's timestamp, its close value, and it's RSI value (initialised as 0)
 justCloses = withIndicators['close'].to_numpy() # "Close" column from CSV converted to numpy array
 justVolume = withIndicators['Volume'].to_numpy() # "Volume" column from CSV converted to numpy array
 justHighs = withIndicators['high'].to_numpy() # "High" column from CSV converted to numpy array
@@ -37,8 +36,7 @@ justLows = withIndicators['low'].to_numpy() # "Low" column from CSV converted to
 We want to iterate through each candle, and using its close value and the 13 candles before its close values, construct the RSI value for that candle.
 """
 
-print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nSanity Check: The first row is: {candleCloses[0]}")
-print(f"The number of rows/candle is: {len(withIndicators)}\n------")
+print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nThe number of rows/candle is: {len(withIndicators)}\n------")
 
 # RSI
 rsi = talib.RSI(justCloses, RSI_Period) 
@@ -65,23 +63,42 @@ withIndicators['SLOWD'] = slowd
 
 # Creating the labels and cleaning up
 withIndicators["Label"] = np.where((withIndicators['close'] + 10) < withIndicators['close'].shift(-1), 1, 0)
+withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 13) is overwritten with the features and labels inserted.
 
-withIndicators.drop(
-        labels = ["time", "open", "high", "low", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "SLOWK", "SLOWD"],
+withIndicators.drop(    # Drop the columns that aren't features.
+        labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "SLOWK", "SLOWD"],
         axis = 1,
         inplace = True
         )
-withIndicators.drop(
+withIndicators.drop(    # Drop the first 33 rows that have blank cells.
         labels = range(0, 33),
         axis=0,
         inplace = True
         )
 
-print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
-withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
+trainFeaturesDF = withIndicators.iloc[:18000, 0:4]
+trainFeaturesDF.to_csv("./CSVs/trainFeaturesDF.csv", index=False, header=False)
+trainLabelsDF = withIndicators.iloc[:18000, 4]
+trainLabelsDF.to_csv("./CSVs/trainLabelsDF.csv", index=False, header=False)
+testFeaturesDF = withIndicators.iloc[18001:, 0:4]
+testFeaturesDF.to_csv("./CSVs/testFeaturesDF.csv", index=False, header=False)
+testLabelsDF = withIndicators.iloc[18001:, 4]
+testLabelsDF.to_csv("./CSVs/testLabelsDF .csv", index=False, header=False)
+
+trainFeatures = trainFeaturesDF.to_numpy()
+trainLabels = trainLabelsDF.to_numpy()
+testLabels = testLabelsDF.to_numpy()
+testFeatures = testFeaturesDF.to_numpy()
+print("\nShape of new dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
 
 # Open the CSV in Excel for viewing
 if platform.system() == 'Darwin':       # macOS
     subprocess.call(('open', "./CSVs/withFeatures.csv"))
 elif platform.system() == 'Windows':    # Windows
     os.startfile("./CSVs/withFeatures.csv")
+
+"""
+Now that the CSV is cleaned up, we can begin implementing the classifier.
+"""
+
+print("\n------\nData is now cleaned up and partioned, let's apply the classifiers.\n------")
