@@ -94,12 +94,18 @@ trainLabelsDF.to_csv("./CSVs/trainLabelsDF.csv", index=False, header=False)
 testFeaturesDF = withIndicators.iloc[18001:, 0:4]
 testFeaturesDF.to_csv("./CSVs/testFeaturesDF.csv", index=False, header=False)
 testLabelsDF = withIndicators.iloc[18001:, 4]
-testLabelsDF.to_csv("./CSVs/testLabelsDF .csv", index=False, header=False)
+testLabelsDF.to_csv("./CSVs/testLabelsDF.csv", index=False, header=False)
 
 featureNames = list(trainFeaturesDF.columns.values) 
 print(f"The features currently selected for training are: {featureNames}")
 trainFeatures = trainFeaturesDF.to_numpy() # Convert the partitioned dataframes above into numpy arrays (needed for the classifiers).
 trainLabels = trainLabelsDF.to_numpy()
+print(trainLabels)
+counter = 0
+for i in trainLabels:
+    if i == 0:
+        counter += 1
+print(f"counted: {counter}")
 testLabels = testLabelsDF.to_numpy()
 testFeatures = testFeaturesDF.to_numpy()
 print("Dimensions of the partitioned dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
