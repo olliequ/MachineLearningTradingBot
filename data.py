@@ -39,7 +39,7 @@ We want to iterate through each candle, and using its close value and the 13 can
 print(f"\n------\n***15M CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nSanity Check: The first row is: {candleCloses[0]}")
 print(f"The number of rows/candle is: {len(withIndicators)}\n------")
 
-#RSI
+# RSI
 rsi = talib.RSI(justCloses, RSI_Period) 
 withIndicators['RSI'] = rsi
 
@@ -63,9 +63,7 @@ withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
 # Creating the labels
-for i in range(0, len(withIndicators)-1):
-    if withIndicators['close'][i] < withIndicators['close'][i+1]:
-        withIndicators['Label'][i] = 1
+withIndicators["Label"] = np.where(withIndicators['close'] > withIndicators['close'].shift(), 1, 0)
 
 print(f"\nBelow will simply print the first 20 candles. Open up withIndicators.csv to see them all. The first 13 candles below obviously don't have an RSI:\n\n{withIndicators.loc[0:19,:]}")
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=False) # The newly created CSV file (made on line 13) is overwritten with the inserted RSI values and saved.
