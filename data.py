@@ -129,7 +129,7 @@ def nb_num_features(train_features, train_labels, test_features): # Naive Bayers
     return predictions
 
 nb_predictions = nb_num_features(trainFeatures, trainLabels, testFeatures) # Predictions for the test set. 
-print(f"1) Naive Bayes\n\tPredicted class distribution:\t- {Counter(nb_predictions)}")
+print(f"1) Naive Bayes\n\t- Predicted class distribution:\t- {Counter(nb_predictions)}")
 NB_error = 1 - accuracy_score(nb_predictions, testLabels)
 NB_f1 = f1_score(nb_predictions, testLabels, average='macro')
 print(f"\n---> NB\t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
@@ -165,3 +165,8 @@ lr_f1 = f1_score(lr_predictions, testLabels, average='macro')
 print(f"\n2) Logistic Regression\n\t- Predicted class distribution:\t{Counter(lr_predictions)}")
 print(f'\t- The coefficients for this LR classifier are:\t{logisticRegr.coef_}')
 print(f"\n---> LR\t\tError: {round(lr_err, 2)}\tMacro F1: {round(lr_f1, 2)}")
+
+"""
+Current problem: Both classifiers are predicting 0 as the label for every candle. 
+83% is the given accuracy only because the test labels are 83% 0. Thus, it's a misleading accuracy.
+"""
