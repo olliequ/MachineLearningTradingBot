@@ -68,7 +68,7 @@ withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The 
 if platform.system() == 'Darwin':       # macOS
     subprocess.call(('open', "./CSVs/withFeatures.csv"))
 elif platform.system() == 'Windows':    # Windows
-    os.startfile("./CSVs/withFeatures.csv")
+    os.startfile(".\CSVs\withFeatures.csv")
 
 # Now the data processing begins. We drop the useless columns and rows.
 withIndicators.drop(    # Drop the columns that aren't features.
