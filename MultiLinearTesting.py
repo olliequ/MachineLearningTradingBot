@@ -105,8 +105,9 @@ model = lm.fit(x_train, y_train)
 
 y_predict = lm.predict(x_test)
 
-
-#print('Accuracy Score: ', accuracy_score(y_test, y_predict))
+y_test = np.array(y_test)
+print(y_test)
+print(y_predict)
 
 #print('F1 Score: ', f1_score(y_test, y_predict))
 

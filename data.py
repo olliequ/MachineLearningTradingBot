@@ -6,6 +6,7 @@ from sklearn.feature_selection import mutual_info_classif as MIC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import MinMaxScaler
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
@@ -13,7 +14,7 @@ We'll use the TA library to take in each candle (and previous candle closes befo
 features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("./CSVs/NANOUSDT_15m.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00 # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00 # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal value initialised as 0.
@@ -62,7 +63,7 @@ withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
 # Creating the labels and saving the completed dataset. 
-withIndicators["Label"] = np.where((withIndicators['close'] + 0.02) < withIndicators['close'].shift(-1), 1, 0)
+withIndicators["Label"] = np.where((withIndicators['close'] + 15) < withIndicators['close'].shift(-1), 1, 0)
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 # The below opens the CSV in Excel for viewing when this script is run.
 if platform.system() == 'Darwin':       # macOS
@@ -72,7 +73,7 @@ elif platform.system() == 'Windows':    # Windows
 
 # Now the data processing begins. We drop the useless columns and rows.
 withIndicators.drop(    # Drop the columns that aren't features.
-        labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "OBV", "SLOWK", "SLOWD"],
+        labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "SLOWK", "SLOWD"],
         axis = 1,
         inplace = True
         )
@@ -82,6 +83,8 @@ withIndicators.drop(    # Drop the first 33 rows as they contain blank cells.
         inplace = True
         )
 
+scaler = MinMaxScaler()
+withIndicators[["BBW", "OBV"]] = scaler.fit_transform(withIndicators[["BBW", "OBV"]])
 numberOfFeatures = withIndicators.shape[1]
 numberOfCandles = withIndicators.shape[0]
 """
@@ -142,6 +145,18 @@ print(f"1) Naive Bayes\n\t- Predicted class distribution:\t- {Counter(nb_predict
 NB_error = 1 - accuracy_score(nb_predictions, testLabels)
 NB_f1 = f1_score(nb_predictions, testLabels, average='macro')
 print(f"\n---> NB\t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
+
+testCloses = justCloses[16770:]
+dict = {'closes': testCloses, 'actual': testLabels, 'predicted': nb_predictions}
+print(testCloses.shape, testLabels.shape)
+df_ = pd.DataFrame(dict)
+df_.to_csv('hmmm.csv')
+
+profit_loss = 0
+for i in range(len(nb_predictions)-1):
+    if nb_predictions[i] == 1:
+        profit_loss = profit_loss + (testCloses[i+1]-testCloses[i])
+print(f"Outcome is: ${round(profit_loss, 2)}")
 
 # ---> Logistic Regression
 lr_predictions = []
