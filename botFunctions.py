@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import talib, subprocess, platform, os, math, copy
 from collections import Counter
 from sklearn.feature_selection import mutual_info_classif as MIC
@@ -28,40 +29,47 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     real = talib.OBV(justCloses, justVolume)
     slowk, slowd = talib.STOCH(justHighs, justLows, justCloses, fastk_period=14, slowk_period=1, slowk_matype=0, slowd_period=3, slowd_matype=0)
 
-    latestData = {'RSI': rsi, 'MACD': macd, 'MACDSIGNAL': macdsignal,'MACDHIST': macdhist, 'BBW': bbw, 'OBV': real, 'SLOWK': slowk, 'SLOWD': slowd}
-    latestData["Label"] = 0 
-    latestData["Label"] = np.where((withIndicators['close'] + 15) < withIndicators['close'].shift(-1), 1, 0)
-    latestData.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
+    latestData = {'close': justCloses, 'RSI': rsi, 'MACD': macd, 'MACDSIGNAL': macdsignal,'MACDHIST': macdhist, 'BBW': bbw, 'OBV': real, 'SLOWK': slowk, 'SLOWD': slowd}
+    _df_ = pd.DataFrame(latestData)
+    _df_["Label"] = 0 
+    _df_["Label"] = np.where((_df_['close'] + 15) < _df_['close'].shift(-1), 1, 0)
+    _df_.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
     if platform.system() == 'Darwin':       # macOS
         subprocess.call(('open', "./CSVs/withFeatures.csv"))
     elif platform.system() == 'Windows':    # Windows
         os.startfile(".\CSVs\withFeatures.csv")
-
-    latestData.drop(    # Drop the first 33 rows as they contain blank cells.
+    
+    _df_.drop(    # Drop the columns that aren't features.
+        labels = ["close"],
+        axis = 1,
+        inplace = True
+        )
+    _df_.drop(    # Drop the first 33 rows as they contain blank cells.
             labels = range(0, 33),
             axis=0,
             inplace = True
             )
 
     scaler = MinMaxScaler()
-    latestData[["BBW", "OBV"]] = scaler.fit_transform(latestData[["BBW", "OBV"]])
-    numberOfFeatures = latestData.shape[1]
-    numberOfCandles = latestData.shape[0]
+    _df_[["BBW", "OBV"]] = scaler.fit_transform(_df_[["BBW", "OBV"]])
+    numberOfFeatures = _df_.shape[1]
+    numberOfCandles = _df_.shape[0]
     """
     Below we partition the whole dataset into 4 parts: training data, training labels, test data, test labels.
     It's 90/10 split -- 90% of candles are used for training, and the other 10% is the test set where make the
     predictions and then compare them to the actual test labels.
     """
     print(f"There are {numberOfFeatures} columns, and {numberOfCandles} rows.")
-    trainFeaturesDF = latestData.iloc[:math.floor(0.8*numberOfCandles), 0:numberOfFeatures-1]
+    trainFeaturesDF = _df_.iloc[:math.floor(0.8*numberOfCandles), 0:numberOfFeatures-1]
     trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
-    trainLabelsDF = latestData.iloc[:math.floor(0.8*numberOfCandles), numberOfFeatures-1]
+    trainLabelsDF = _df_.iloc[:math.floor(0.8*numberOfCandles), numberOfFeatures-1]
     trainLabelsDF.to_csv("./CSVs/trainLabels.csv", index=False, header=False)
-    testFeaturesDF = latestData.iloc[math.floor(0.8*numberOfCandles+1):, 0:numberOfFeatures-1]
+    testFeaturesDF = _df_.iloc[math.floor(0.8*numberOfCandles+1):, 0:numberOfFeatures-1]
     testFeaturesDF.to_csv("./CSVs/testFeatures.csv", index=False, header=False)
-    testLabelsDF = latestData.iloc[math.floor(0.8*numberOfCandles+1):, numberOfFeatures-1]
+    testLabelsDF = _df_.iloc[math.floor(0.8*numberOfCandles+1):, numberOfFeatures-1]
     testLabelsDF.to_csv("./CSVs/testLabels.csv", index=False, header=False)
+    _df_.to_csv("./CSVs/afterModifications.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
     featureNames = list(trainFeaturesDF.columns.values) 
     print(f"The features currently selected for training are: {featureNames}")
@@ -131,6 +139,7 @@ def LR_Classifier(train_features, train_labels, test_features, test_labels):
     lr_predictions = logisticRegr.predict(testFeaturesNormalised)
 
     score = logisticRegr.score(testFeaturesNormalised, test_labels)
+    print(score)
     lr_err = 1 - accuracy_score(lr_predictions, test_labels)
     lr_f1 = f1_score(lr_predictions, test_labels, average='macro')
 

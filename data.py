@@ -105,12 +105,14 @@ def on_message(ws, message):
             order_succeeded = order(SIDE_BUY, TRADE_QUANTITY, TRADE_SYMBOL)
             if order_succeeded:
                 in_position = True
+                print(f"Purchased ETH at {justCloses}.")
             else: 
                 print("Something went wrong during purchase.")
         elif in_position:
-            order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)    # this is the line where the order is actually made in our account. the 'order' function from above is called.
+            order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)    # Order is actually made in our account. the 'order' function from above is called.
             if order_succeeded:
                 in_position = False
+                print(f"ETH sold at {justCloses}.")
             else:
                 print("Something went wrong during sell.")
 
