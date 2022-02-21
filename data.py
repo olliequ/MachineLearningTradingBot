@@ -30,9 +30,9 @@ justLows = withIndicators['low'].to_numpy()         # "Low" column from CSV conv
 
 print(f"\n------\n***15m CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nThe total number of rows/candles is: {len(withIndicators)}\n------\n")
 
+# Before we open the socket connection, we'll first do a test run on the historic data we have, just for reference.
 trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume)
 predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-
 testCloses = justCloses[16770:]
 print(testCloses.shape)
 dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
@@ -72,7 +72,7 @@ def on_close(ws):
 
 # Main function. This function is called everytime a candle tick is sent from the binance stream to us (so every 2 seconds... there are 30 ticks per 1m candle)
 def on_message(ws, message):
-    global closes, in_position     # Global variables from above that we reference in this function.
+    global justLows, justHighs, justCloses, justVolume, in_position     # Global variables from above that we reference in this function.
 
     print("--------New candle tick inbound!--------")         
     json_message = json.loads(message) # Takes json candle tick stream data (called `message`... comes every 2 seconds) and converts it to python data structure that is more useful
@@ -87,13 +87,15 @@ def on_message(ws, message):
 
     if is_candle_closed:               # if the tick we're looking at is the 1 in 30 that is closed.
         print("This candle closed at {}.".format(close))
-        justCloses.append(float(close))
-        justHighs.append(float(high))
-        justLows.append(float(low))
-        justVolume.append(float(volume))
+        print("1")
+        justCloses.append(close)
+        justHighs.append(high)
+        justLows.append(low)
+        justVolume.append(volume)
+        print("2")
         trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume)
         predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-
+        print("3")
         testCloses = justCloses[16770:]
         print(testCloses.shape)
         dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
@@ -115,6 +117,8 @@ def on_message(ws, message):
                 print(f"ETH sold at {justCloses}.")
             else:
                 print("Something went wrong during sell.")
+        elif predictions[-1] == 0:
+            print("Don't buy!")
 
 # Lines needed for the Binance data stream (called a websocket). Last line makes the stream run continuously.
 ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
