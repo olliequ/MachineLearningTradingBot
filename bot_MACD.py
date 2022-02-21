@@ -2,7 +2,7 @@
 import websocket, json, talib, numpy
 import config
 from binance.client import Client
-from binance.enums import *
+from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
 
 # connect to the binance stream. stream we're feeding off is the 1minute candles for the ETH/USDT pair
 SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_1m"
@@ -105,7 +105,6 @@ def on_message(ws, message):
                         in_position = True
             print("-------This candle has finished processing, and the 9 & 20 for it have been compared. Onto the next one!-------\n")
 
-#lines needed for the Binance data stream (called a websocket). Last line makes the stream run continuously.
-print("Pls")
+# Lines needed for the Binance data stream (called a websocket). Last line makes the stream run continuously.
 ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
 ws.run_forever()

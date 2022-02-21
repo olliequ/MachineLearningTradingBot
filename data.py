@@ -1,12 +1,14 @@
 import numpy as np
 import pandas as pd
-import talib, copy, subprocess, platform, os, math 
+import talib, copy, subprocess, platform, os, math, websocket, json, config, pprint
 from collections import Counter
 from sklearn.feature_selection import mutual_info_classif as MIC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import MinMaxScaler
+from binance.client import Client
+from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
 
 """
 The first thing we need to do is compute the desired features. That is, MACD, RSI, Bollinger etc.
@@ -92,7 +94,7 @@ Below we partition the whole dataset into 4 parts: training data, training label
 It's 90/10 split -- 90% of candles are used for training, and the other 10% is the test set where make the
 predictions and then compare them to the actual test labels.
 """
-print(numberOfFeatures, numberOfCandles)
+print(f"There are {numberOfFeatures} columns, and {numberOfCandles} rows.")
 trainFeaturesDF = withIndicators.iloc[:math.floor(0.8*numberOfCandles), 0:numberOfFeatures-1]
 trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
 trainLabelsDF = withIndicators.iloc[:math.floor(0.8*numberOfCandles), numberOfFeatures-1]
@@ -148,7 +150,6 @@ print(f"\n---> NB\t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
 
 testCloses = justCloses[16770:]
 dict = {'closes': testCloses, 'actual': testLabels, 'predicted': nb_predictions}
-print(testCloses.shape, testLabels.shape)
 df_ = pd.DataFrame(dict)
 df_.to_csv('hmmm.csv')
 
@@ -193,3 +194,61 @@ print(f"\n---> LR\t\tError: {round(lr_err, 2)}\tMacro F1: {round(lr_f1, 2)}")
 Current problem: Both classifiers are predicting 0 as the label for every candle. 
 83% is the given accuracy only because the test labels are 83% 0. Thus, it's a misleading accuracy.
 """
+
+# connect to the binance stream. stream we're feeding off is the 1minute candles for the ETH/USDT pair
+SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_1m"
+
+fastperiod = 12
+slowperiod = 26
+signalperiod = 9
+TRADE_SYMBOL = 'ETHUSDT'
+TRADE_QUANTITY = 0.005 # amount of ETH purchased & sold per action
+
+closes = []                     # starts off as an empty list. each time a candle closes, its value gets appended to this list. list resets when program is terminated.
+in_position = False             # variable for if we have already made a buy action or not.
+
+client = Client(config.API_KEY, config.API_SECRET)  # make a client 'object' that just represents our personal binance account.
+
+# framework for the 'order' function. this function is called when a buy or sell is needed. 4 arguments.
+def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
+    try:
+        print("sending order")
+        order = client.create_order(symbol=symbol, side=side, type=order_type, quantity=quantity)
+        print(order)
+    except Exception as e:
+        print("an exception occured - {}".format(e))
+        return False
+    
+    return True
+
+# prints message when a connection is first established to the binance websocket stream (i.e. when the program is started)
+def on_open(ws):
+    print("\nOpened connection - let's go!\n")
+    print(config)
+
+# prints message when a connection is closed off to the binance stream (i.e. when the program is ended)
+def on_close(ws):
+    print("Closed connection. See ya next time.\n")
+
+# main function. this function is called everytime a candle tick is sent from the binance stream to us (so every 2 seconds... there are 30 ticks per 1m candle)
+def on_message(ws, message):
+    global closes, in_position     # global variables from above that we reference in this function.
+
+    print("--------New candle tick inbound!--------")         
+    json_message = json.loads(message) # takes json candle tick stream data (called `message`... comes every 2 seconds) and converts it to python data structure that is more useful
+    pprint.pprint(json_message)      # uncomment the left to see the printing of each candle tick in the terminal (every 2 seconds)
+
+    candle = json_message['k']         # each candle has three components (can see in binance API docs). we want the third one, denoted by 'k'
+    is_candle_closed = candle['x']     # easy reference to whether or not the candle closed. One of the 30 ticks per minute will have this Boolean value as "True"
+    close = candle['c']                # easy reference to what the closing price is (we are interested in the 'c' of the tick which has the closed value above as "True")
+
+    if is_candle_closed:               # if the tick we're looking at is the 1 in 30 that is closed.
+        print("This candle closed at {}.".format(close))
+        closes.append(float(close))    # append its value to the list
+        print("All candle closes:")
+        print(closes)                  # print the entire list for our reference
+        print("")
+
+# Lines needed for the Binance data stream (called a websocket). Last line makes the stream run continuously.
+ws = websocket.WebSocketApp(SOCKET, on_open=on_open, on_close=on_close, on_message=on_message)
+ws.run_forever()
