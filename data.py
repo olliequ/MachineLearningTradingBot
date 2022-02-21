@@ -94,7 +94,7 @@ def on_message(ws, message):
         trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(appendedJL, appendedJH, appendedJC, appendedJV)
         predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
         testCloses = appendedJC[16770:]
-        print(testCloses.shape, predictions.shape, testLabels.shape)
+        print(testCloses.shape, predictions.shape, testLabels.shape) # Checking that they are equal size.
         dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
         df_ = pd.DataFrame(dict)
         df_.to_csv('hmmm.csv')
@@ -107,7 +107,7 @@ def on_message(ws, message):
                 in_position = True
                 print(f"Purchased ETH at {justCloses}.")
             else: 
-                print("Something went wrong during purchase.")
+                print("---> Something went wrong during purchase.")
         elif in_position:
             order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)    # Order is actually made in our account. the 'order' function from above is called.
             if order_succeeded:
