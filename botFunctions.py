@@ -33,14 +33,14 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     _df_ = pd.DataFrame(latestData)
     _df_["Label"] = 0 
     _df_["Label"] = np.where((_df_['close'] + 15) < _df_['close'].shift(-1), 1, 0)
-    _df_.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
+    _df_.to_csv("./CSVs/withFeatures.csv", index=True, header=True)
 
     if platform.system() == 'Darwin':       # macOS
         subprocess.call(('open', "./CSVs/withFeatures.csv"))
     elif platform.system() == 'Windows':    # Windows
         os.startfile(".\CSVs\withFeatures.csv")
     
-    _df_.drop(    # Drop the columns that aren't features.
+    _df_.drop(    # Drop the columns that aren't good features.
         labels = ["close", "SLOWK", "SLOWD"],
         axis = 1,
         inplace = True
@@ -62,13 +62,13 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     It's 80/10 split -- 80% of candles are used for training, and the other 80% is the test set where make the
     predictions and then compare them to the actual test labels.
     """
-    trainFeaturesDF = _df_.iloc[:math.floor(0.8*numberOfCandles), 0:numberOfFeatures-1]
+    trainFeaturesDF = _df_.iloc[:math.floor(0.79997*numberOfCandles), 0:numberOfFeatures-1]
     trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
-    trainLabelsDF = _df_.iloc[:math.floor(0.8*numberOfCandles), numberOfFeatures-1]
+    trainLabelsDF = _df_.iloc[:math.floor(0.79997*numberOfCandles), numberOfFeatures-1]
     trainLabelsDF.to_csv("./CSVs/trainLabels.csv", index=False, header=False)
-    testFeaturesDF = _df_.iloc[math.floor(0.8*numberOfCandles+1):, 0:numberOfFeatures-1]
+    testFeaturesDF = _df_.iloc[math.floor(0.79997*numberOfCandles+1):, 0:numberOfFeatures-1]
     testFeaturesDF.to_csv("./CSVs/testFeatures.csv", index=False, header=False)
-    testLabelsDF = _df_.iloc[math.floor(0.8*numberOfCandles+1):, numberOfFeatures-1]
+    testLabelsDF = _df_.iloc[math.floor(0.79997*numberOfCandles+1):, numberOfFeatures-1]
     testLabelsDF.to_csv("./CSVs/testLabels.csv", index=False, header=False)
     _df_.to_csv("./CSVs/afterModifications.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
@@ -79,7 +79,7 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     testLabels = testLabelsDF.to_numpy()
     testFeatures = testFeaturesDF.to_numpy()
     print("Dimensions of the partitioned dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
-    mutualInformation(trainFeatures, trainLabels, featureNames)
+    # mutualInformation(trainFeatures, trainLabels, featureNames)
 
     print("\n------\nData is now cleaned up and partioned with MI calculated, so let's apply the classifiers.\n------\n")
     return trainFeatures, trainLabels, testFeatures, testLabels

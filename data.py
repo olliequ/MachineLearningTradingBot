@@ -52,7 +52,7 @@ client = Client(config.API_KEY, config.API_SECRET)  # Make a client 'object' tha
 # Framework for the 'order' function. this function is called when a buy or sell is needed. 4 arguments.
 def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
     try:
-        print("sending order")
+        print("---> Sending order to Binance")
         order = client.create_order(symbol=symbol, side=side, type=order_type, quantity=quantity)
         print(order)
     except Exception as e:
@@ -74,7 +74,7 @@ def on_close(ws):
 def on_message(ws, message):
     global justLows, justHighs, justCloses, justVolume, in_position     # Global variables from above that we reference in this function.
 
-    print("--------New candle tick inbound!--------")         
+    print("--------New candle tick received!--------")         
     json_message = json.loads(message) # Takes json candle tick stream data (called `message`... comes every 2 seconds) and converts it to python data structure that is more useful
     # pprint.pprint(json_message)      # Uncomment the left to see the printing of each candle tick in the terminal (every 2 seconds)
 
@@ -87,23 +87,21 @@ def on_message(ws, message):
 
     if is_candle_closed:               # if the tick we're looking at is the 1 in 30 that is closed.
         print("This candle closed at {}.".format(close))
-        print("1")
-        justCloses.append(close)
-        justHighs.append(high)
-        justLows.append(low)
-        justVolume.append(volume)
-        print("2")
-        trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume)
+        appendedJC = np.append(justCloses, float(close))
+        appendedJH = np.append(justHighs, float(high))
+        appendedJL = np.append(justLows, float(low))
+        appendedJV = np.append(justVolume, float(volume))
+        trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(appendedJL, appendedJH, appendedJC, appendedJV)
         predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-        print("3")
-        testCloses = justCloses[16770:]
-        print(testCloses.shape)
+        testCloses = appendedJC[16770:]
+        print(testCloses.shape, predictions.shape, testLabels.shape)
         dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
         df_ = pd.DataFrame(dict)
         df_.to_csv('hmmm.csv')
         botFunctions.profitLoss(testCloses, predictions)
 
         if predictions[-1] == 1 and not in_position:     # Bot has predicted it's a good buy; if we're not in position then place a buy order at this candle.
+            print("---> Bot thinks we should buy!")
             order_succeeded = order(SIDE_BUY, TRADE_QUANTITY, TRADE_SYMBOL)
             if order_succeeded:
                 in_position = True
