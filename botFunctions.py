@@ -41,7 +41,7 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
         os.startfile(".\CSVs\withFeatures.csv")
     
     _df_.drop(    # Drop the columns that aren't features.
-        labels = ["close"],
+        labels = ["close", "SLOWK", "SLOWD"],
         axis = 1,
         inplace = True
         )
@@ -55,12 +55,13 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     _df_[["BBW", "OBV"]] = scaler.fit_transform(_df_[["BBW", "OBV"]])
     numberOfFeatures = _df_.shape[1]
     numberOfCandles = _df_.shape[0]
+    print(f"There are {numberOfFeatures} columns, and {numberOfCandles} rows.")
+
     """
     Below we partition the whole dataset into 4 parts: training data, training labels, test data, test labels.
-    It's 90/10 split -- 90% of candles are used for training, and the other 10% is the test set where make the
+    It's 80/10 split -- 80% of candles are used for training, and the other 80% is the test set where make the
     predictions and then compare them to the actual test labels.
     """
-    print(f"There are {numberOfFeatures} columns, and {numberOfCandles} rows.")
     trainFeaturesDF = _df_.iloc[:math.floor(0.8*numberOfCandles), 0:numberOfFeatures-1]
     trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
     trainLabelsDF = _df_.iloc[:math.floor(0.8*numberOfCandles), numberOfFeatures-1]
@@ -78,31 +79,11 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     testLabels = testLabelsDF.to_numpy()
     testFeatures = testFeaturesDF.to_numpy()
     print("Dimensions of the partitioned dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
-    
-    """
-    Mutual Information (MI) measures the correlation of each feature with the labels; the degree as to which
-    each feature affects the label. Optional metric, but I included it for fun.
-    """
-    highest_mi_feature_name = "" # feature with highest MI
-    lowest_mi_feature_name = "" # feature with lowest MI
-    mi_score = MIC(trainFeatures, trainLabels, discrete_features=False)
-    index_of_largest_mi = np.argmax(mi_score)
-    largest_mi = mi_score[index_of_largest_mi]
-    index_of_lowest_mi = np.argmin(mi_score)
-    lowest_mi = mi_score[index_of_lowest_mi]
-    highest_mi_feature_name = featureNames[index_of_largest_mi]
-    lowest_mi_feature_name = featureNames[index_of_lowest_mi]
-    print(f"\nThe feature with the highest MI is: {highest_mi_feature_name}")
-    print(f"The feature with the lowest MI is: {lowest_mi_feature_name}")
-    print(f'All 16 MIC scores are as follows: {np.round(mi_score, 3)}')
+    mutualInformation(trainFeatures, trainLabels, featureNames)
 
-    """
-    Now that the CSV is cleaned up and we have an idea of MI, we can begin implementing the classifier.
-    """
-    print("\n------\nData is now cleaned up and partioned, so let's apply the classifiers.\n------\n")
+    print("\n------\nData is now cleaned up and partioned with MI calculated, so let's apply the classifiers.\n------\n")
     return trainFeatures, trainLabels, testFeatures, testLabels
 
-# ---> Naive Bayes
 def NB_Classifier(train_features, train_labels, test_features, test_labels): # Naive Bayers classifier.
     predictions = []
     gnb = GaussianNB()
@@ -121,7 +102,6 @@ def normalizer(array, mean, std):
             normalized_array[j][i] = (array[j][i] - mean[i])/std[i]  
     return normalized_array
 
-# ---> Logistic Regression
 def LR_Classifier(train_features, train_labels, test_features, test_labels):
     lr_predictions = []
     trainFeaturesNormalised = []
@@ -146,6 +126,24 @@ def LR_Classifier(train_features, train_labels, test_features, test_labels):
     print(f"\n2) Logistic Regression\n\t- Predicted class distribution:\t{Counter(lr_predictions)}")
     print(f'\t- The coefficients for this LR classifier are:\t{logisticRegr.coef_}')
     print(f"\n---> LR\t\tError: {round(lr_err, 2)}\tMacro F1: {round(lr_f1, 2)}")
+
+def mutualInformation(trainFeatures, trainLabels, featureNames):
+    """
+    Mutual Information (MI) measures the correlation of each feature with the labels; the degree as to which
+    each feature affects the label. Optional metric, but I included it for fun.
+    """
+    highest_mi_feature_name = ""                # feature with highest MI
+    lowest_mi_feature_name = ""                 # feature with lowest MI
+    mi_score = MIC(trainFeatures, trainLabels, discrete_features=False)
+    index_of_largest_mi = np.argmax(mi_score)
+    largest_mi = mi_score[index_of_largest_mi]
+    index_of_lowest_mi = np.argmin(mi_score)
+    lowest_mi = mi_score[index_of_lowest_mi]
+    highest_mi_feature_name = featureNames[index_of_largest_mi]
+    lowest_mi_feature_name = featureNames[index_of_lowest_mi]
+    print(f"\nThe feature with the highest MI is: {highest_mi_feature_name}")
+    print(f"The feature with the lowest MI is: {lowest_mi_feature_name}")
+    print(f'All 16 MIC scores are as follows: {np.round(mi_score, 3)}')
 
 """
 Current problem: Both classifiers are predicting 0 as the label for every candle. 
