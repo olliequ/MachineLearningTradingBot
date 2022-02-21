@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import talib, copy, subprocess, platform, os 
+import talib, copy, subprocess, platform, os, math 
 from collections import Counter
 from sklearn.feature_selection import mutual_info_classif as MIC
 from sklearn.naive_bayes import GaussianNB
@@ -13,7 +13,7 @@ We'll use the TA library to take in each candle (and previous candle closes befo
 features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("./CSVs/ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/NANOUSDT_15m.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00 # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00 # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00 # Add a new column in the dataframe, MACD Signal value initialised as 0.
@@ -22,7 +22,7 @@ rawData["BBW"] = 0.00 # Bollinger Band Width -- a measure between the bands.
 rawData["OBV"] = 0.00 # Add new column in the dataframe, OBV value initialised as 0.
 rawData["SLOWK"] = 0.00
 rawData["SLOWD"] = 0.00
-rawData["Label"] = 0
+rawData["Label"] = 0 
 rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
 withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
@@ -62,7 +62,7 @@ withIndicators['SLOWK'] = slowk
 withIndicators['SLOWD'] = slowd
 
 # Creating the labels and saving the completed dataset. 
-withIndicators["Label"] = np.where((withIndicators['close'] + 10) < withIndicators['close'].shift(-1), 1, 0)
+withIndicators["Label"] = np.where((withIndicators['close'] + 0.02) < withIndicators['close'].shift(-1), 1, 0)
 withIndicators.to_csv("./CSVs/withFeatures.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 # The below opens the CSV in Excel for viewing when this script is run.
 if platform.system() == 'Darwin':       # macOS
@@ -72,7 +72,7 @@ elif platform.system() == 'Windows':    # Windows
 
 # Now the data processing begins. We drop the useless columns and rows.
 withIndicators.drop(    # Drop the columns that aren't features.
-        labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "SLOWK", "SLOWD"],
+        labels = ["time", "open", "high", "low", "close", "Volume", "Volume MA", "MACD", "MACDSIGNAL", "OBV", "SLOWK", "SLOWD"],
         axis = 1,
         inplace = True
         )
@@ -82,18 +82,21 @@ withIndicators.drop(    # Drop the first 33 rows as they contain blank cells.
         inplace = True
         )
 
+numberOfFeatures = withIndicators.shape[1]
+numberOfCandles = withIndicators.shape[0]
 """
 Below we partition the whole dataset into 4 parts: training data, training labels, test data, test labels.
 It's 90/10 split -- 90% of candles are used for training, and the other 10% is the test set where make the
 predictions and then compare them to the actual test labels.
 """
-trainFeaturesDF = withIndicators.iloc[:18000, 0:4]
+print(numberOfFeatures, numberOfCandles)
+trainFeaturesDF = withIndicators.iloc[:math.floor(0.8*numberOfCandles), 0:numberOfFeatures-1]
 trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
-trainLabelsDF = withIndicators.iloc[:18000, 4]
+trainLabelsDF = withIndicators.iloc[:math.floor(0.8*numberOfCandles), numberOfFeatures-1]
 trainLabelsDF.to_csv("./CSVs/trainLabels.csv", index=False, header=False)
-testFeaturesDF = withIndicators.iloc[18001:, 0:4]
+testFeaturesDF = withIndicators.iloc[math.floor(0.8*numberOfCandles+1):, 0:numberOfFeatures-1]
 testFeaturesDF.to_csv("./CSVs/testFeatures.csv", index=False, header=False)
-testLabelsDF = withIndicators.iloc[18001:, 4]
+testLabelsDF = withIndicators.iloc[math.floor(0.8*numberOfCandles+1):, numberOfFeatures-1]
 testLabelsDF.to_csv("./CSVs/testLabels.csv", index=False, header=False)
 
 featureNames = list(trainFeaturesDF.columns.values) 
