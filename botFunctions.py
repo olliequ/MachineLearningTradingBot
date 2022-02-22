@@ -18,7 +18,7 @@ def profitLoss(testCloses, predictions):
     for i in range(len(predictions)-1):
         if predictions[i] == 1:
             profit_loss = profit_loss + (testCloses[i+1]-testCloses[i])
-    print(f"Outcome is: ${round(profit_loss, 2)}")
+    print(f"---> Total PNL: ${round(profit_loss, 2)}")
     return profit_loss
 
 def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
@@ -37,7 +37,7 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     _df_ = pd.DataFrame(latestData)
     _df_["Label"] = 0 
     _df_["Label"] = np.where((_df_['close']) + 15 < _df_['close'].shift(-1), 1, 0)
-    _df_.to_csv("./CSVs/withFeatures.csv", index=True, header=True)
+    _df_.to_csv("./CSVs/Script Outputs/withFeatures.csv", index=True, header=True)
     
     _df_.drop(    # Drop the columns that aren't good features.
         labels = ["close", "SLOWK", "SLOWD"],
@@ -61,15 +61,15 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     It's 80/10 split -- 80% of candles are used for training, and the other 80% is the test set where make the
     predictions and then compare them to the actual test labels.
     """
-    trainFeaturesDF = _df_.iloc[:17435, 0:numberOfFeatures-1]
-    trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
-    trainLabelsDF = _df_.iloc[:17435, numberOfFeatures-1]
-    trainLabelsDF.to_csv("./CSVs/trainLabels.csv", index=False, header=False)
-    testFeaturesDF = _df_.iloc[17436:, 0:numberOfFeatures-1]
-    testFeaturesDF.to_csv("./CSVs/testFeatures.csv", index=False, header=False)
-    testLabelsDF = _df_.iloc[17436:, numberOfFeatures-1]
-    testLabelsDF.to_csv("./CSVs/testLabels.csv", index=False, header=False)
-    _df_.to_csv("./CSVs/afterModifications.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
+    trainFeaturesDF = _df_.iloc[:17000, 0:numberOfFeatures-1]
+    trainFeaturesDF.to_csv("./CSVs/Script Outputs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
+    trainLabelsDF = _df_.iloc[:17000, numberOfFeatures-1]
+    trainLabelsDF.to_csv("./CSVs/Script Outputs/trainLabels.csv", index=False, header=False)
+    testFeaturesDF = _df_.iloc[17001:, 0:numberOfFeatures-1]
+    testFeaturesDF.to_csv("./CSVs/Script Outputs/testFeatures.csv", index=False, header=False)
+    testLabelsDF = _df_.iloc[17001:, numberOfFeatures-1]
+    testLabelsDF.to_csv("./CSVs/Script Outputs/testLabels.csv", index=False, header=False)
+    _df_.to_csv("./CSVs/Script Outputs/afterModifications.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
     featureNames = list(trainFeaturesDF.columns.values) 
     print(f"The features currently selected for training are: {featureNames}")
@@ -80,7 +80,7 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     print("Dimensions of the partitioned dataframes:\n\t- trainFeatures: {}\n\t- trainLabels: {}\n\t- testFeatures: {}\n\t- testLabels: {}".format(trainFeatures.shape, trainLabels.shape, testFeatures.shape, testLabels.shape))
     # mutualInformation(trainFeatures, trainLabels, featureNames)
 
-    print("\n------\nData is now cleaned up and partioned with MI calculated, so let's apply the classifiers.\n------\n")
+    print("\n------\nData is now cleaned up and partioned with MI calculated, so let's apply the classifier.\n------\n")
     return trainFeatures, trainLabels, testFeatures, testLabels
 
 def NB_Classifier(train_features, train_labels, test_features, test_labels): # Naive Bayers classifier.
@@ -88,11 +88,11 @@ def NB_Classifier(train_features, train_labels, test_features, test_labels): # N
     gnb = GaussianNB()
     gnb.fit(train_features, train_labels)
     predictions = gnb.predict(test_features)
-    print(f"Actual test labels class distribution:\t- {Counter(test_labels)}")
+    print(f"---> Actual test labels class distribution:\t- {Counter(test_labels)}\n")
     print(f"1) Naive Bayes\n\t- Predicted class distribution:\t- {Counter(predictions)}")
     NB_error = 1 - accuracy_score(predictions, test_labels)
     NB_f1 = f1_score(predictions, test_labels, average='macro')
-    print(f"\n---> NB\t\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
+    print(f"\n\tError: {round(NB_error, 2)}\tMacro F1: {round(NB_f1, 2)}")
     return predictions
 
 def normalizer(array, mean, std):
