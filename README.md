@@ -13,7 +13,7 @@ It's ill-advised to trade with emotion -- so why not have a bot do it for you? T
 
 ## The Specifics
 #### Summary 
-This project is primarily powered by 2 Python scripts: `bot.py` and `botFunctions.py`. `bot.py` retrieves real-time data from a cryptocurrency exchange platform by establishing and maintaining a socket connection. The exchange is Binance, and the particular asset traded by default in this project is Ethereum. The incoming data is cleaned up and handed off to `botFunctions.py`. It is here where various financial indicators based on what the candle closes at are calculated. Using historical datasets, a classifier can be built and trained on it. Once trained, a closed candle can be fed to the classifier and in return advice on whether to buy or not buy the candle is spat out.
+This project is primarily powered by 2 Python scripts: `bot.py` and `botFunctions.py`. `bot.py` retrieves real-time data from a cryptocurrency exchange platform by establishing and maintaining a socket connection. The exchange is Binance, and the particular asset traded by default in this project is Ethereum. The incoming data is cleaned up and handed off to `botFunctions.py`. It is here where various financial indicators based on what the candle closes at are calculated and handed to a classifier which has been trained on historical data. In return, advice on whether to buy or not buy the candle is provided by the classifier. Analysed candles are actually appended to the historical dataset such that the classifier is continually trained.
 
 #### Customizability
 The bot is designed such that the following parameters are easily adjustable: 
