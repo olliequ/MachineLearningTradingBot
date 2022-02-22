@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime
 import talib, copy, subprocess, platform, os, math, websocket, json, config, pprint, botFunctions
 from binance.client import Client
 from binance.enums import ORDER_TYPE_MARKET, SIDE_BUY, SIDE_SELL
@@ -10,7 +11,7 @@ We'll use the TA library to take in each candle (and previous candle closes befo
 features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("./CSVs/ETHUSDT_15m_july1.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/BINANCE_ETH_1m_feb22.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00           # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00          # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00    # Add a new column in the dataframe, MACD Signal value initialised as 0.
@@ -28,13 +29,15 @@ justVolume = withIndicators['Volume'].to_numpy()    # "Volume" column from CSV c
 justHighs = withIndicators['high'].to_numpy()       # "High" column from CSV converted to numpy array
 justLows = withIndicators['low'].to_numpy()         # "Low" column from CSV converted to numpy array
 
-print(f"\n------\n***15m CANDLE DATA SET: Candles are from 01/07/21 to 04/02/22***\nThe total number of rows/candles is: {len(withIndicators)}\n------\n")
+ts_start = datetime.utcfromtimestamp(int(rawData["time"].iloc[0])).strftime('%Y-%m-%d %H:%M:%S')
+ts_end = datetime.utcfromtimestamp(int(rawData["time"].iloc[-1])).strftime('%Y-%m-%d %H:%M:%S')
+print(f"\n------\n***15m CANDLE DATA SET: Candles are from {ts_start} to {ts_end}***\nThe total number of rows/candles is: {len(withIndicators)}\n------\n")
 
 # Before we open the socket connection, we'll first do a test run on the historic data we have, just for reference.
 trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume)
 predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-testCloses = justCloses[16770:]
-print(testCloses.shape)
+testCloses = justCloses[17469:]
+print(testCloses.shape, testLabels.shape, predictions.shape)
 dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
 df_ = pd.DataFrame(dict)
 df_.to_csv('hmmm.csv')
@@ -93,7 +96,7 @@ def on_message(ws, message):
         appendedJV = np.append(justVolume, float(volume))
         trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(appendedJL, appendedJH, appendedJC, appendedJV)
         predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-        testCloses = appendedJC[16770:]
+        testCloses = appendedJC[17469:]
         print(testCloses.shape, predictions.shape, testLabels.shape) # Checking that they are equal size.
         dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
         df_ = pd.DataFrame(dict)

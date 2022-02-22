@@ -32,7 +32,7 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     latestData = {'close': justCloses, 'RSI': rsi, 'MACD': macd, 'MACDSIGNAL': macdsignal,'MACDHIST': macdhist, 'BBW': bbw, 'OBV': real, 'SLOWK': slowk, 'SLOWD': slowd}
     _df_ = pd.DataFrame(latestData)
     _df_["Label"] = 0 
-    _df_["Label"] = np.where((_df_['close'] + 15) < _df_['close'].shift(-1), 1, 0)
+    _df_["Label"] = np.where((_df_['close']) < _df_['close'].shift(-1), 1, 0)
     _df_.to_csv("./CSVs/withFeatures.csv", index=True, header=True)
 
     if platform.system() == 'Darwin':       # macOS
@@ -62,13 +62,13 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     It's 80/10 split -- 80% of candles are used for training, and the other 80% is the test set where make the
     predictions and then compare them to the actual test labels.
     """
-    trainFeaturesDF = _df_.iloc[:math.floor(0.79997*numberOfCandles), 0:numberOfFeatures-1]
+    trainFeaturesDF = _df_.iloc[:math.floor(0.79996*numberOfCandles), 0:numberOfFeatures-1]
     trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
-    trainLabelsDF = _df_.iloc[:math.floor(0.79997*numberOfCandles), numberOfFeatures-1]
+    trainLabelsDF = _df_.iloc[:math.floor(0.79996*numberOfCandles), numberOfFeatures-1]
     trainLabelsDF.to_csv("./CSVs/trainLabels.csv", index=False, header=False)
-    testFeaturesDF = _df_.iloc[math.floor(0.79997*numberOfCandles+1):, 0:numberOfFeatures-1]
+    testFeaturesDF = _df_.iloc[math.floor(0.79996*numberOfCandles+1):, 0:numberOfFeatures-1]
     testFeaturesDF.to_csv("./CSVs/testFeatures.csv", index=False, header=False)
-    testLabelsDF = _df_.iloc[math.floor(0.79997*numberOfCandles+1):, numberOfFeatures-1]
+    testLabelsDF = _df_.iloc[math.floor(0.79996*numberOfCandles+1):, numberOfFeatures-1]
     testLabelsDF.to_csv("./CSVs/testLabels.csv", index=False, header=False)
     _df_.to_csv("./CSVs/afterModifications.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
@@ -89,6 +89,7 @@ def NB_Classifier(train_features, train_labels, test_features, test_labels): # N
     gnb = GaussianNB()
     gnb.fit(train_features, train_labels)
     predictions = gnb.predict(test_features)
+    print(f"Actual test labels class distribution:\t- {Counter(test_labels)}")
     print(f"1) Naive Bayes\n\t- Predicted class distribution:\t- {Counter(predictions)}")
     NB_error = 1 - accuracy_score(predictions, test_labels)
     NB_f1 = f1_score(predictions, test_labels, average='macro')
