@@ -11,7 +11,7 @@ We'll use the TA library to take in each candle (and previous candle closes befo
 features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("./CSVs/BINANCE_ETH_1m_feb22.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/BINANCE_ETH_15_feb22.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00           # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00          # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00    # Add a new column in the dataframe, MACD Signal value initialised as 0.
@@ -24,10 +24,10 @@ rawData["Label"] = 0
 rawData.to_csv("./CSVs/withFeatures.csv", index=False) # Save this modified dataframe into a new CSV file.
 withIndicators = pd.read_csv("./CSVs/withFeatures.csv") # Read in this new CSV file as a fresh dataframe, called 'withIndicators'.
 
-justCloses = withIndicators['close'].to_numpy()     # "Close" column from CSV converted to numpy array
-justVolume = withIndicators['Volume'].to_numpy()    # "Volume" column from CSV converted to numpy array
-justHighs = withIndicators['high'].to_numpy()       # "High" column from CSV converted to numpy array
-justLows = withIndicators['low'].to_numpy()         # "Low" column from CSV converted to numpy array
+justCloses = withIndicators['close'].to_numpy().tolist()      # "Close" column from CSV converted to numpy array
+justVolume = withIndicators['Volume'].to_numpy().tolist()     # "Volume" column from CSV converted to numpy array
+justHighs = withIndicators['high'].to_numpy().tolist()        # "High" column from CSV converted to numpy array
+justLows = withIndicators['low'].to_numpy().tolist()          # "Low" column from CSV converted to numpy array
 
 ts_start = datetime.utcfromtimestamp(int(rawData["time"].iloc[0])).strftime('%Y-%m-%d %H:%M:%S')
 ts_end = datetime.utcfromtimestamp(int(rawData["time"].iloc[-1])).strftime('%Y-%m-%d %H:%M:%S')
@@ -36,7 +36,7 @@ print(f"\n------\n***15m CANDLE DATA SET: Candles are from {ts_start} to {ts_end
 # Before we open the socket connection, we'll first do a test run on the historic data we have, just for reference.
 trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume)
 predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-testCloses = justCloses[17469:]
+testCloses = np.array(justCloses[17469:])
 print(testCloses.shape, testLabels.shape, predictions.shape)
 dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
 df_ = pd.DataFrame(dict)
@@ -90,14 +90,15 @@ def on_message(ws, message):
 
     if is_candle_closed:               # if the tick we're looking at is the 1 in 30 that is closed.
         print("This candle closed at {}.".format(close))
-        appendedJC = np.append(justCloses, float(close))
-        appendedJH = np.append(justHighs, float(high))
-        appendedJL = np.append(justLows, float(low))
-        appendedJV = np.append(justVolume, float(volume))
-        trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(appendedJL, appendedJH, appendedJC, appendedJV)
+        justLows.append(float(low))
+        justHighs.append(float(high))
+        justCloses.append(float(close))
+        justVolume.append(float(volume))
+        trainFeatures, trainLabels, testFeatures, testLabels = botFunctions.getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume)
         predictions = botFunctions.NB_Classifier(trainFeatures, trainLabels, testFeatures, testLabels) 
-        testCloses = appendedJC[17469:]
-        print(testCloses.shape, predictions.shape, testLabels.shape) # Checking that they are equal size.
+
+        testCloses = justCloses[17469:]
+        print(len(testCloses), len(predictions), len(testLabels))       # Checking that they are equal size.
         dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
         df_ = pd.DataFrame(dict)
         df_.to_csv('hmmm.csv')

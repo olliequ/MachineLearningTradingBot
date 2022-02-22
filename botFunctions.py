@@ -22,7 +22,11 @@ def profitLoss(testCloses, predictions):
     return profit_loss
 
 def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
-    rsi = talib.RSI(justCloses, RSI_Period) 
+    justLows = np.array(justLows)
+    justHighs = np.array(justHighs)
+    justCloses = np.array(justCloses)
+    justVolume = np.array(justVolume)
+    rsi = talib.RSI(justCloses, RSI_Period)
     macd, macdsignal, macdhist = talib.MACD(justCloses, Fast_Period, Slow_Period, Signal_Period) # MACD calculated using candle close data, Fast/Slow/Signal Periods can be changed at initialisation point.
     upperband, middleband, lowerband = talib.BBANDS(justCloses, timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
     bbw = ((upperband - lowerband) / middleband)
@@ -62,13 +66,13 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     It's 80/10 split -- 80% of candles are used for training, and the other 80% is the test set where make the
     predictions and then compare them to the actual test labels.
     """
-    trainFeaturesDF = _df_.iloc[:math.floor(0.79996*numberOfCandles), 0:numberOfFeatures-1]
+    trainFeaturesDF = _df_.iloc[:17435, 0:numberOfFeatures-1]
     trainFeaturesDF.to_csv("./CSVs/trainFeatures.csv", index=False, header=False) # Save to a CSV so we can manually eyeball data.
-    trainLabelsDF = _df_.iloc[:math.floor(0.79996*numberOfCandles), numberOfFeatures-1]
+    trainLabelsDF = _df_.iloc[:17435, numberOfFeatures-1]
     trainLabelsDF.to_csv("./CSVs/trainLabels.csv", index=False, header=False)
-    testFeaturesDF = _df_.iloc[math.floor(0.79996*numberOfCandles+1):, 0:numberOfFeatures-1]
+    testFeaturesDF = _df_.iloc[17436:, 0:numberOfFeatures-1]
     testFeaturesDF.to_csv("./CSVs/testFeatures.csv", index=False, header=False)
-    testLabelsDF = _df_.iloc[math.floor(0.79996*numberOfCandles+1):, numberOfFeatures-1]
+    testLabelsDF = _df_.iloc[17436:, numberOfFeatures-1]
     testLabelsDF.to_csv("./CSVs/testLabels.csv", index=False, header=False)
     _df_.to_csv("./CSVs/afterModifications.csv", index=True, header=True) # The newly created CSV file (made on line 23) is overwritten with the features and labels inserted.
 
