@@ -2,7 +2,7 @@
   <img src="https://i.pinimg.com/originals/76/f3/ec/76f3ec2ea3bb788ae75fb099cf6e55a7.jpg" />
 </p>
 
-# Project Iasonas: A ML-Reinforced Trading Bot
+# Project Damianos: A ML-Reinforced Trading Bot
 
 ## Introduction
 It's ill-advised to trade with emotion -- so why not have a bot do it for you? This project leverages the power of machine learning to devise an algorithm that provides advice on whether to purchase an asset at any given time. This advice is fed to a bot which automatically executes trades based on said advice.
