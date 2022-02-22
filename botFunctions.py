@@ -36,13 +36,8 @@ def getFeaturesAndLabels(justLows, justHighs, justCloses, justVolume):
     latestData = {'close': justCloses, 'RSI': rsi, 'MACD': macd, 'MACDSIGNAL': macdsignal,'MACDHIST': macdhist, 'BBW': bbw, 'OBV': real, 'SLOWK': slowk, 'SLOWD': slowd}
     _df_ = pd.DataFrame(latestData)
     _df_["Label"] = 0 
-    _df_["Label"] = np.where((_df_['close']) < _df_['close'].shift(-1), 1, 0)
+    _df_["Label"] = np.where((_df_['close']) + 15 < _df_['close'].shift(-1), 1, 0)
     _df_.to_csv("./CSVs/withFeatures.csv", index=True, header=True)
-
-    if platform.system() == 'Darwin':       # macOS
-        subprocess.call(('open', "./CSVs/withFeatures.csv"))
-    elif platform.system() == 'Windows':    # Windows
-        os.startfile(".\CSVs\withFeatures.csv")
     
     _df_.drop(    # Drop the columns that aren't good features.
         labels = ["close", "SLOWK", "SLOWD"],

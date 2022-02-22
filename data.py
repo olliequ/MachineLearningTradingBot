@@ -11,7 +11,7 @@ We'll use the TA library to take in each candle (and previous candle closes befo
 features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("./CSVs/BINANCE_ETH_15_feb22.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/BINANCE_ETH5_feb22.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00           # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00          # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00    # Add a new column in the dataframe, MACD Signal value initialised as 0.
@@ -40,11 +40,11 @@ testCloses = np.array(justCloses[17469:])
 print(testCloses.shape, testLabels.shape, predictions.shape)
 dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
 df_ = pd.DataFrame(dict)
-df_.to_csv('hmmm.csv')
+df_.to_csv('./CSVs/LabelsComparison.csv')
 botFunctions.profitLoss(testCloses, predictions)
 
 # Connect to the binance stream. stream we're feeding off is the 1minute candles for the ETH/USDT pair.
-SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_5m"
 
 TRADE_SYMBOL = 'ETHUSDT'
 TRADE_QUANTITY = 0.025          # Amount of ETH purchased & sold per action.
@@ -101,7 +101,7 @@ def on_message(ws, message):
         print(len(testCloses), len(predictions), len(testLabels))       # Checking that they are equal size.
         dict = {'closes': testCloses, 'actual': testLabels, 'predicted': predictions}
         df_ = pd.DataFrame(dict)
-        df_.to_csv('hmmm.csv')
+        df_.to_csv('./CSVs/LabelsComparison.csv')
         botFunctions.profitLoss(testCloses, predictions)
 
         if predictions[-1] == 1 and not in_position:     # Bot has predicted it's a good buy; if we're not in position then place a buy order at this candle.
