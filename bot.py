@@ -11,7 +11,7 @@ We'll use the TA library to take in each candle (and previous candle closes befo
 features. We then insert these values into the spreadsheet.
 """
 
-rawData = pd.read_csv("./CSVs/Historical Data/eth_5m_feb22.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
+rawData = pd.read_csv("./CSVs/Historical Data/eth_5m_feb23.csv") # Read in the original spreadsheet from TV as a Pandas dataframe.
 rawData["RSI"] = 0.00           # Add a new column in the dataframe, whereby each value for each candle is initialised as 0 (this is obviously updated in the code)
 rawData["MACD"] = 0.00          # Add a new column in the dataframe, MACD value initialised as 0.
 rawData["MACDSIGNAL"] = 0.00    # Add a new column in the dataframe, MACD Signal value initialised as 0.
@@ -48,7 +48,7 @@ print("\n------------\nThe historical data has been analysed with a suitable cla
 SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_5m"
 
 TRADE_SYMBOL = 'ETHUSDT'
-TRADE_QUANTITY = 0.025          # Amount of ETH purchased & sold per action.
+TRADE_QUANTITY = 0.02          # Amount of ETH purchased & sold per action.
 in_position = False             # Variable for if we have already made a buy action or not.
 
 client = Client(config.API_KEY, config.API_SECRET)  # Make a client 'object' that just represents our personal binance account.
@@ -90,7 +90,7 @@ def on_message(ws, message):
     volume = candle['v']
 
     if is_candle_closed:               # If the tick we're looking at is the one that is closed.
-        print(f"This candle closed at {round(close, 2)}. Let's feed it to the classifier and see what it suggest to do.\n")
+        print(f"This candle closed at {round(float(close), 2)}. Let's feed it to the classifier and see what it suggests to do.\n")
         justLows.append(float(low))
         justHighs.append(float(high))
         justCloses.append(float(close))
@@ -107,7 +107,8 @@ def on_message(ws, message):
 
         if predictions[-1] == 1 and not in_position:    # Bot has predicted it's a good buy; if we're not in position then place a buy order at this candle.
             print("---> Bot thinks we should buy!")
-            order_succeeded = order(SIDE_BUY, TRADE_QUANTITY, TRADE_SYMBOL)     # Order is actually made in our account. the 'order' function from above is called.
+            # order_succeeded = order(SIDE_BUY, TRADE_QUANTITY, TRADE_SYMBOL)     # Order is actually made in our account. the 'order' function from above is called.
+            order_succeeded = True
             if order_succeeded:
                 print(f"Purchased ETH at {round(justCloses[-1], 2)}.")
                 in_position = True
@@ -118,7 +119,8 @@ def on_message(ws, message):
             print("---> We're already in position so despite this oppurtunity we won't buy again -- we only hold 1 unit at a time.")
 
         elif predictions[-1] == 0 and in_position:      # If we're in position, only if the bot doesn't say the current candle is a good buy do we sell.
-            order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)    
+            # order_succeeded = order(SIDE_SELL, TRADE_QUANTITY, TRADE_SYMBOL)    
+            order_succeeded = True
             if order_succeeded:
                 print(f"---> ETH sold at {round(justCloses[-1], 2)}.")
                 in_position = False
